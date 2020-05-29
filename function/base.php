@@ -103,3 +103,8 @@ function charSplice($char, $keys, $values, $keySymbol = '`', $valueSymbol = '\''
   }
   return $result;
 }
+
+function Response($code = 20001, $data = null, $statusCode = 200)
+{
+  HTTP::response($statusCode, $code, $data);
+}
