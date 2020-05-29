@@ -39,24 +39,61 @@ class HTTP
     $result = HTTP::request($url, $data, "POST", $header);
     return $result;
   }
-  static function response($data, $statusCode, $code)
+  private static $errorCode = [
+    "MODULES_DOES_NOT_EXISTS" => [
+      "message" => "模块不存在",
+      "statusCode" => 404,
+      "code" => 40401
+    ], //请求模块不存在
+    "MODULES_METHOD_DOES_NOT_EXISTS" => [
+      "message" => "模块方法不存在",
+      "statusCode" => 404,
+      "code" => 40402
+    ]
+  ];
+  static function response($statusCode, $code, $data = null)
   {
+    if (gettype($data) == "string") {
+      $message = $data;
+      $data = [];
+    } else if (gettype($data) == "array") {
+      if ($data['message']) {
+        $message = $data['message'];
+        unset($data['message']);
+      }
+    }
+
+    if (gettype($code) == "string") {
+      if ($data == null || !$data['message']) {
+        if (self::$errorCode[$code]['message']) {
+          $message = self::$errorCode[$code]['message'];
+        }
+      }
+      $statusCode = self::$errorCode[$code]['statusCode'];
+      $code = self::$errorCode[$code]['code'];
+    }
+
+
     http_response_code($statusCode);
     $data = [
       "statusCode" => $statusCode,
       "code" => $code,
       "data" => $data,
-      "time" => time()
+      "time" => time(),
+      "message" => $message
     ];
     print_r(json_encode($data));
     exit();
   }
-  static function result($data)
+  static function result($data = null)
   {
-    return self::response($data, 200, 200000);
+    if (!$data['message']) {
+      $data['message'] = "请求成功";
+    }
+    return self::response(200, 200000, $data);
   }
-  static function error($data, $code, $statusCode = 400)
+  static function error($code, $statusCode = 400, $data = null)
   {
-    return self::response($data, $statusCode, $code);
+    return self::response($statusCode, $code, $data);
   }
 }
