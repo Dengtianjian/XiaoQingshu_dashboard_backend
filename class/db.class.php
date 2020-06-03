@@ -27,6 +27,13 @@ class DB
     }
     return $result;
   }
+  static function charSpilt($char, $values, $symbol = "'")
+  {
+    foreach ($values as &$item) {
+      $item = "{$symbol}{$item}{$symbol}";
+    }
+    return implode("$char", $values);
+  }
   static function query($sql, $params = [])
   {
     if ($sql == "") {
@@ -36,6 +43,11 @@ class DB
     $sql = $Database->replaceParams($sql, $params);
     $result = $Database->query($sql, $params);
     return $result;
+  }
+  static function lastInsertId()
+  {
+    global $Database;
+    return $Database->lastInsertId();
   }
   static function fetch($sql, $params = [])
   {
@@ -75,5 +87,19 @@ class DB
     return self::query($sql, [
       $tableName
     ]);
+  }
+  /**
+   * 删除记录
+   *
+   * @param string $tableName 表名称
+   * @param string $conditionSql 条件语句
+   * @param array $params 语句参数
+   * @return boolean 删除结果
+   */
+  static function delete($tableName, $conditionSql, $params = [])
+  {
+    $sql = "DELETE FROM `&t` $conditionSql";
+    array_unshift($params, $tableName);
+    return self::query($sql, $params);
   }
 }
