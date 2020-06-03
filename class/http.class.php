@@ -88,6 +88,7 @@ class HTTP
 
     $user = [];
     $token = null;
+
     if ($_C['user_id'] && $statusCode == 200) {
       $user = $_C['user'];
       $token = $_C['token'];
