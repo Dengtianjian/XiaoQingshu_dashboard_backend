@@ -60,6 +60,7 @@ function Table($tableName)
  */
 function debug($data)
 {
+  header("Content-type:text/html;charset=utf-8");
   echo "<pre style='word-break:break-all;white-space: break-spaces;font-family:微软雅黑;'>";
   print_r($data);
   echo "</pre>";
@@ -104,7 +105,7 @@ function charSplice($char, $keys, $values, $keySymbol = '`', $valueSymbol = '\''
   return $result;
 }
 
-function Response($code = 20001, $data = null, $statusCode = 200)
+function Response($data = null, $statusCode = 200, $code = 20001)
 {
-  HTTP::response($statusCode, $code, $data);
+  HTTP::response($data, $statusCode, $code);
 }
