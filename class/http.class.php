@@ -43,36 +43,56 @@ class HTTP
     "MODULES_DOES_NOT_EXISTS" => [
       "message" => "模块不存在",
       "statusCode" => 404,
-      "code" => 40401
+      "code" => 404001
     ], //请求模块不存在
     "MODULES_METHOD_DOES_NOT_EXISTS" => [
       "message" => "模块方法不存在",
       "statusCode" => 404,
-      "code" => 40402
+      "code" => 404002
+    ],
+    "USER_IS_NOT_LOGGED_IN" => [
+      "message" => "用户未登录",
+      "statusCode" => 401,
+      "code" => 401001
     ]
   ];
-  static function response($statusCode, $code, $data = null)
+  static function response($data = null, $statusCode = 400, $code)
   {
-    if (gettype($data) == "string") {
+    global $_C;
+    if (gettype($data) == "string" && $statusCode != 200) {
       $message = $data;
       $data = [];
     } else if (gettype($data) == "array") {
       if ($data['message']) {
         $message = $data['message'];
         unset($data['message']);
-      }
-    }
-
-    if (gettype($code) == "string") {
-      if ($data == null || !$data['message']) {
-        if (self::$errorCode[$code]['message']) {
-          $message = self::$errorCode[$code]['message'];
+        if (isset($data['data'])) {
+          $data = $data['data'];
         }
       }
-      $statusCode = self::$errorCode[$code]['statusCode'];
-      $code = self::$errorCode[$code]['code'];
     }
 
+    if (gettype($statusCode) == "string") {
+      if ($data['message']) {
+        $message = $data['message'];
+      }
+      if ($data == null || !$data['message']) {
+        if (self::$errorCode[$statusCode]['message']) {
+          $message = self::$errorCode[$statusCode]['message'];
+        }
+      }
+      $code = self::$errorCode[$statusCode]['code'];
+      $statusCode = self::$errorCode[$statusCode]['statusCode'];
+    }
+
+
+    $user = [];
+    $token = null;
+    if ($_C['user_id'] && $statusCode == 200) {
+      $user = $_C['user'];
+      $token = $_C['token'];
+      unset($user['user_password']);
+    }
 
     http_response_code($statusCode);
     $data = [
@@ -80,7 +100,9 @@ class HTTP
       "code" => $code,
       "data" => $data,
       "time" => time(),
-      "message" => $message
+      "message" => $message,
+      "user" => $user,
+      "token" => $token
     ];
     print_r(json_encode($data));
     exit();
@@ -90,10 +112,10 @@ class HTTP
     if (!$data['message']) {
       $data['message'] = "请求成功";
     }
-    return self::response(200, 200000, $data);
+    return self::response($data, 200, 200000);
   }
-  static function error($code, $statusCode = 400, $data = null)
+  static function error($data = null, $statusCode = 400, $code = 400001)
   {
-    return self::response($statusCode, $code, $data);
+    return self::response($data, $statusCode, $code);
   }
 }
