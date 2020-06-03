@@ -31,7 +31,7 @@ class Database
           unset($params[$index]);
           break;
         case '&s':
-          $sql = str_replace($item, "'?'", $sql);
+          $sql = str_replace($item, "?", $sql);
           break;
         case '&i':
           if (gettype($params[$index]) == "array") {
@@ -55,7 +55,7 @@ class Database
   function query($sql, $params = [])
   {
     $sth = $this->DB->prepare($sql);
-    $sth->execute($params);
+    $sth->execute(array_values($params));
     if ($sth->errorCode() != 0) {
       throw new Error($sth->errorInfo()[2], $sth->errorInfo()[1]);
     }
@@ -64,5 +64,9 @@ class Database
     } else {
       return $sth->rowCount();
     }
+  }
+  function lastInsertId()
+  {
+    return $this->DB->lastInsertId();
   }
 }
