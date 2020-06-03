@@ -43,6 +43,7 @@ class Token
   }
   function checkExpire($token = null)
   {
+    global $_C;
     if ($token == null) {
       if (isset($_GET['token'])) {
         $token = addslashes($_GET['token']);
@@ -63,11 +64,15 @@ class Token
         "message" => "凭证已过期"
       ];
     }
-    if (time() - 604800 > $DBToken['token_expire']) {
+    if ($DBToken['token_expire'] - 604800 < time()) {
       $_C['user_id'] = $DBToken['user_id'];
       $this->refreshToken();
     }
 
-    return $DBToken;
+    $_C['user_id'] = $DBToken['token_userid'];
+    $_C['token'] = $DBToken['token_content'];
+    $_C['user']['token'] = $DBToken['token_content'];
+
+    return true;
   }
 }
