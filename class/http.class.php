@@ -54,6 +54,11 @@ class HTTP
       "message" => "用户未登录",
       "statusCode" => 401,
       "code" => 401001
+    ],
+    "WECHAT_CLOUD_DATABASE_QUERY_ERROR" => [
+      "message" => "服务器错误",
+      "statusCode" => 500,
+      "code" => 500001
     ]
   ];
   static function response($data = null, $statusCode = 400, $code)

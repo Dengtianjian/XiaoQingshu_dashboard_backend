@@ -4,7 +4,7 @@ if (!defined("IN_C")) {
   exit("NO ACCESS");
 }
 
-class Cloud_DB extends Cloud
+class Cloud_http_db extends Cloud
 {
   /**
    * 查询
@@ -18,6 +18,11 @@ class Cloud_DB extends Cloud
     $result = self::request("databasequery", [
       "query" => $statement
     ]);
+    if ($result['errcode'] == 0) {
+      foreach ($result['data'] as &$item) {
+        $item = json_decode($item, true);
+      }
+    }
     return $result;
   }
   /**

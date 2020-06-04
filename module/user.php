@@ -1,12 +1,27 @@
 <?php
 
+if (!defined("IN_C")) {
+  exit("NO ACCESS");
+}
+
+
 class user
 {
   public $methods = [
     "signin",
-    "verify"
+    "verify",
+    "getUser",
+    "getUsers",
+    "getUserJoinedSchool",
+    "getUserJoinedClass",
+    "getUserGroup"
   ];
 
+  /**
+   * 用户登录
+   *
+   * @return void
+   */
   function signin()
   {
     global $_C, $USERPASS;
@@ -29,8 +44,91 @@ class user
     ];
   }
 
+  /**
+   * 验证用户凭证
+   *
+   * @return void
+   */
   function verify()
   {
-    return true;
+    global $_C;
+    return $_C['user'];
+  }
+
+  /**
+   * 获取指定用户详细信息
+   *
+   * @return array
+   */
+  function getUser()
+  {
+    $openid = addslashes($_GET["_id"]);
+
+    $result = Cloud::callFunction("User", "getUserProfile", [
+      "_userid" => $openid
+    ]);
+    if ($result['errcode'] != 0) {
+      Response(null, "WECHAT_CLOUD_DATABASE_QUERY_ERROR");
+    }
+    $result = $result['resp_data'];
+
+    return $result;
+  }
+
+  /**
+   * 获取所有用户
+   * @param integer $page 页数
+   * @param integer $limit 获取的数据量
+   * @return array 用户数据
+   */
+  function getUsers()
+  {
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+    $page = $page - 1 < 0 ? 0 : $page - 1;
+
+    $result = Cloud::http("db")::query("db.collection('user').field({_id:true,avatar_url:true,nickname:true,status:true}).skip($page).limit($limit).get()");
+    if ($result['errcode'] > 0) {
+      Response(null, "WECHAT_CLOUD_DATABASE_QUERY_ERROR");
+    }
+    return $result['data'];
+  }
+
+  /**
+   * 获取指定用户已加入的学校
+   * @param string<array> $_userid 用户OPENID
+   * @return void
+   */
+  function getUserJoinedSchool()
+  {
+    $_userid = addslashes($_GET['_id']);
+
+    $result = Cloud::callFunction("Dashboard", "getUserJoinedSchool", [
+      "_userid" => $_userid
+    ]);
+    if ($result['errcode'] != 0) {
+      Response(null, "WECHAT_CLOUD_DATABASE_QUERY_ERROR");
+    }
+    $result = $result['resp_data'];
+    return $result;
+  }
+
+  /**
+   * 获取用户已加入的班级
+   * @param string<array> @_userid 用户OPENID
+   * @return void
+   */
+  function getUserJoinedClass()
+  {
+    $_userid = addslashes($_GET['_id']);
+
+    $result = Cloud::callFunction("Dashboard", "getUserJoinedClass", [
+      "_userid" => $_userid
+    ]);
+    if ($result['errcode'] != 0) {
+      Response(null, "WECHAT_CLOUD_DATABASE_QUERY_ERROR");
+    }
+    $result = $result['resp_data'];
+    return $result;
   }
 }

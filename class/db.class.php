@@ -41,6 +41,7 @@ class DB
     }
     global $Database;
     $sql = $Database->replaceParams($sql, $params);
+
     $result = $Database->query($sql, $params);
     return $result;
   }
@@ -62,14 +63,14 @@ class DB
       return [];
     }
   }
-  static function update($tableName, $data, $conditionSql, $params = [])
+  static function update($tableName, $data, $conditionSql)
   {
-    $setSql = DB::charSplice("=", array_keys($data), array_fill(0, count($data), "?"));
+    $setSql = DB::charSplice("=", array_keys($data), array_fill(0, count($data), "?"), "`", "");
     $setSql = implode(",", $setSql);
-    $sql = "UPDATE `&t` SET({$setSql}) $conditionSql";
+    $sql = "UPDATE `&t` SET {$setSql} $conditionSql";
     $params = array_merge([
       $tableName
-    ], $params);
+    ], array_values($data));
     return self::query($sql, $params);
   }
   static function jsonset_update($tableName, $data, $conditionSql = "")
@@ -101,5 +102,80 @@ class DB
     $sql = "DELETE FROM `&t` $conditionSql";
     array_unshift($params, $tableName);
     return self::query($sql, $params);
+  }
+
+  static function quote($str, $symbol = "'", $noarray = false)
+  {
+    if (is_string($str) || is_int($str) || is_float($str)) {
+      return "{$symbol}{$str}{$symbol}";
+    }
+    if (is_array($str)) {
+      if ($noarray === false) {
+        foreach ($str as $v) {
+          $v = self::quote($v, true);
+        }
+        return $str;
+      } else {
+        return "''";
+      }
+    }
+
+    if (is_bool($str)) {
+      return $str ? "1" : "0";
+    }
+
+    return "''";
+  }
+
+  /**
+   * 字段组合
+   *
+   * @param string $field 字段名称
+   * @param any $val 字段值
+   * @param string $glue 链接语句
+   * @return string
+   */
+  static function field($field, $val, $glue = "=")
+  {
+    if (is_array($val)) {
+      $glue = $glue == 'notin' ? 'notin' : 'in';
+    } elseif ($glue == 'in') {
+      $glue = '=';
+    }
+
+    switch ($glue) {
+      case '=':
+        return $field . $glue . "'$val'";
+        break;
+      case '-':
+      case '+':
+        return $field . '=' . $field . $glue . self::quote((string) $val);
+        break;
+      case '|':
+      case '&':
+      case '^':
+        return $field . '=' . $field . $glue . self::quote($val);
+        break;
+      case '>':
+      case '<':
+      case '<>':
+      case '<=':
+      case '>=':
+        return $field . $glue . self::quote($val);
+        break;
+
+      case 'like':
+        return $field . ' LIKE(' . self::quote($val) . ')';
+        break;
+
+      case 'in':
+      case 'notin':
+        $val = $val ? implode(',', self::quote($val)) : '\'\'';
+        return $field . ($glue == 'notin' ? ' NOT' : '') . ' IN(' . $val . ')';
+        break;
+
+      default:
+        throw new Error('Not allow this glue between field and value: "' . $glue . '"');
+    }
   }
 }

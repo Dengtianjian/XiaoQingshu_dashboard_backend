@@ -4,7 +4,7 @@ if (!defined("IN_C")) {
   exit("NO ACCESS");
 }
 
-class Cloud_storage extends Cloud
+class Cloud_http_storage extends Cloud
 {
   /**
    * 上传文件

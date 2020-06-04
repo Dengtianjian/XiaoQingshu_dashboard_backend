@@ -105,7 +105,43 @@ function charSplice($char, $keys, $values, $keySymbol = '`', $valueSymbol = '\''
   return $result;
 }
 
+/**
+ * 响应请求
+ *
+ * @param array $data 响应的数据
+ * @param integer $statusCode 响应状态码
+ * @param integer $code 响应码
+ * @return void
+ */
 function Response($data = null, $statusCode = 200, $code = 20001)
 {
   HTTP::response($data, $statusCode, $code);
+}
+
+function getUserById($userId)
+{
+  $user = Table("user")->fetch_by_userid($userId);
+  if (count($user) == 0) {
+    return false;
+  }
+  $user = $user[0];
+
+  $user['user_wechat_info'] = json_decode($user['user_wechat_info'], true);
+  if (!$user['user_wechat_info'] || count($user['user_wechat_info']) == 0) {
+    $userOpenId = $user['user_openid'];
+    $wechatUserInfo = Cloud::http("db")::query("db.collection('user').where({_id:'$userOpenId'}).get()");
+    if (count($wechatUserInfo['data']) > 0) {
+      $wechatUserInfo = $wechatUserInfo['data'][0];
+    } else {
+      $wechatUserInfo = [];
+    }
+    Table("user")->update_by_userid($user['user_id'], [
+      "user_avatar" => $wechatUserInfo['avatar_url'],
+      "user_wechat_info" => json_encode($wechatUserInfo)
+    ]);
+    $user['user_wechat_info'] = $wechatUserInfo;
+  }
+
+
+  return $user;
 }

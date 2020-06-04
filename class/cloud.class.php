@@ -7,6 +7,14 @@ if (!defined("IN_C")) {
 class Cloud
 {
   private static $callCount = 0;
+  /**
+   * 云函数调用
+   *
+   * @param string $name 名称
+   * @param string $method 执行的方法
+   * @param array $params 参数
+   * @return array 调用结果
+   */
   static function callFunction($name, $method, $params = [])
   {
     global $_C;
@@ -41,5 +49,38 @@ class Cloud
     ], $params);
     $result = HTTP::post("https://api.weixin.qq.com/tcb/{$method}?access_token={$_C['access_token']['value']}", $params);
     return json_decode($result, true);
+  }
+
+  /**
+   * 调用 云开发http API
+   *
+   * @param string $name 类名称
+   * @return object 类实例
+   */
+  static function http($name)
+  {
+    $filePath = C_ROOT . "/cloud/http/$name.class.php";
+    if (!file_exists($filePath)) {
+      return false;
+    }
+
+    include_once $filePath;
+    $className = "Cloud_http_$name";
+    $instance = new $className();
+    return $instance;
+  }
+
+  static function model($name)
+  {
+    $filePath = C_ROOT . "cloud/model/$name.php";
+
+    if (!file_exists($filePath)) {
+      return false;
+    }
+
+    include_once $filePath;
+    $className = "Cloud_model_$name";
+    $instance = new $className();
+    return $instance;
   }
 }

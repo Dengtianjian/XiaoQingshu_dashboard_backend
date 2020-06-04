@@ -13,7 +13,7 @@ $_REQUEST = $_POST = $_GET = array_merge($_GET, $_POST, $_REQUEST);
 
 //API 模块
 $Modules = [
-  "user"
+  "user", "user_group", "quote"
 ];
 
 //需要 验证凭证的方法
@@ -37,7 +37,6 @@ $requestMethod = addslashes($_GET['method']);
 if (!in_array($requestMethod, $moduleInstance->methods)) {
   HTTP::error(null, "MODULES_METHOD_DOES_NOT_EXISTS");
 }
-
 //验证token
 if (isset($_GET['token']) || in_array($requestMethod, $verifyMethods)) {
   if (!isset($_GET['token']) && in_array($requestMethod, $verifyMethods)) {
@@ -55,7 +54,11 @@ if (isset($_GET['token']) || in_array($requestMethod, $verifyMethods)) {
       default:
         HTTP::error("凭证已过期", 401, 4010002);
     }
+    return;
   }
+  $user = getUserById($_C['user_id']);
+  $user['token'] = $_C['token'];
+  $_C['user'] = $user;
 }
 
 unset($_GET['method'], $_GET['module']);
