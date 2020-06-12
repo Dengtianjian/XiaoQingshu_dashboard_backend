@@ -14,7 +14,7 @@ class user
     "getUsers",
     "getUserJoinedSchool",
     "getUserJoinedClass",
-    "getUserGroup"
+    "uploadUserAvatar"
   ];
 
   /**
@@ -130,5 +130,24 @@ class user
     }
     $result = $result['resp_data'];
     return $result;
+  }
+
+  function uploadUserAvatar()
+  {
+    $avatarFile = $_FILES['avatar'];
+
+    if ($avatarFile['size'] == 0) {
+      Response("上传失败，文件错误", 400, 4000001);
+    }
+
+    $fileId = Cloud::http("storage")::uploadFile($avatarFile, "user/avatar/");
+    $fileTempFile = Cloud::http("storage")::downloadFile([
+      [
+        "fileid" => $fileId,
+        "max_age" => 1300
+      ]
+    ]);
+
+    return $fileTempFile[0];
   }
 }
