@@ -45,6 +45,17 @@ function includeModel($tableName, $filePath = "")
   }
 }
 
+/**
+ * 加载API模块
+ *
+ * @param string $moduleName 模块名称 同文件名称
+ * @return 模块文件路劲
+ */
+function includeModule($moduleName)
+{
+  return sprintf(C_ROOT . "module/$moduleName.php");
+}
+
 function Table($tableName)
 {
   include_once includeModel($tableName);
