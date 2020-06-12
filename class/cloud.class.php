@@ -30,7 +30,7 @@ class Cloud
       Wechat::refreshAccessToken(true);
       return self::callFunction($name, $method, $params);
     }
-    $result['resp_data'] = json_decode($result['resp_data']);
+    $result['resp_data'] = json_decode($result['resp_data'], true);
     self::$callCount = 0;
     return $result;
   }
