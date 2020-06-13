@@ -16,5 +16,5 @@ $DBCONFIG = [
 ];
 
 $USERPASS = [
-  "slat" => "!@#Qingcong"
+  "salt" => "!@#Qingcong"
 ];
