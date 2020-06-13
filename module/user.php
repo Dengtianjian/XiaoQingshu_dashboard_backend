@@ -14,7 +14,8 @@ class user
     "getUsers",
     "getUserJoinedSchool",
     "getUserJoinedClass",
-    "uploadUserAvatar"
+    "uploadUserAvatar",
+    "saveUser"
   ];
 
   /**
@@ -29,7 +30,7 @@ class user
     $password = addslashes($_POST['password']);
 
     $user = Table("user")->fetch_first_by_username($username);
-    $passPeppered = hash_hmac("sha256", $password, $USERPASS['slat']);
+    $passPeppered = hash_hmac("sha256", $password, $USERPASS['salt']);
     if (!password_verify($passPeppered, $user['user_password'])) {
       return Response(4010001, "登录失败，用户名或密码错误", 401);
     }
@@ -67,6 +68,7 @@ class user
     $result = Cloud::callFunction("User", "getUserProfile", [
       "_userid" => $openid
     ]);
+
     if ($result['errcode'] != 0) {
       Response(null, "WECHAT_CLOUD_DATABASE_QUERY_ERROR");
     }
@@ -132,6 +134,11 @@ class user
     return $result;
   }
 
+  /**
+   * 上传用户头像
+   *
+   * @return void
+   */
   function uploadUserAvatar()
   {
     $avatarFile = $_FILES['avatar'];
@@ -149,5 +156,84 @@ class user
     ]);
 
     return $fileTempFile[0];
+  }
+
+  function saveUser()
+  {
+    global $USERPASS;
+    $avatarUrl = addslashes($_GET['avatar_url']);
+    $username = addslashes($_GET['username']);
+    $password = addslashes($_GET['password']);
+    $nickname = addslashes($_GET['nickname']);
+    $group = addslashes($_GET['group']);
+    $registationData = time() * 1000;
+
+    $password = password_hash($password, PASSWORD_BCRYPT);
+
+    $result = Cloud::http("db")::add("db.collection('user').add({
+      data:{
+        avatar_url:'$avatarUrl',
+        username:'$username',
+        password:'$password',
+        nickname:'$nickname',
+        group:'$group',
+        registation_date:$registationData,
+        allow_access:true,
+        allow_comment:true,
+        allow_post:true,
+        class:null,
+        school:null,
+        credits:0,
+        expreience:100,
+        fans:0,
+        message_news:{},
+        report_weight:100,
+        status:'normal'
+      }
+    })");
+
+    if ($result['errcode'] != 0) {
+      Response(null, "WECHAT_CLOUD_DATABASE_QUERY_ERROR");
+    }
+
+    $userId = $result['id_list'][0];
+
+    Cloud::http("db")::add("db.collection('user_profile').add({
+      data:{
+        _userid:'$userId',
+        birthday:0,
+        education:null,
+        email:null,
+        gender:'secret',
+        location:null,
+        phone_number:null,
+        realname:'',
+        'space_bg_image':null,
+        statement:''
+      }
+    })");
+
+    $userInfo = [
+      "_id" => $userId,
+      "avatar_url" => $avatarUrl,
+      "username" => $username,
+      "password" => $password,
+      "nickname" => $nickname,
+      "group" => $group,
+      "registation_date" => $registationData,
+      "allow_access" => true,
+      "allow_comment" => true,
+      "allow_post" => true,
+      "class" => null,
+      "school" => null,
+      "credits" => 0,
+      "expreience" => 100,
+      "fans" => 0,
+      "message_news" => [],
+      "report_weight" => 100,
+      "status" => 'normal'
+    ];
+
+    return  $userInfo;
   }
 }
