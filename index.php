@@ -13,12 +13,12 @@ $_REQUEST = $_POST = $_GET = array_merge($_GET, $_POST, $_REQUEST);
 
 //API 模块
 $Modules = [
-  "user", "user_group", "quote", "school", "common"
+  "user", "user_group", "quote", "school", "common", "post"
 ];
 
 //需要 验证凭证的方法
 $verifyMethods = [
-  "verify", "init"
+  "verify", "init", "uploadPostImage"
 ];
 
 $module = addslashes($_GET['module']); //获取请求的模块名称
